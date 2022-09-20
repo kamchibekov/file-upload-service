@@ -4,6 +4,7 @@ import express, { Express } from 'express'
 import cors from 'cors'
 import apiRoutes from './route/api'
 import { AppDataSource } from './data-source'
+import responseTime from 'response-time'
 
 declare global {
   namespace Express {
@@ -17,6 +18,7 @@ const app: Express = express()
 
 app.use(cors())
 app.use(express.json())
+app.use(responseTime())
 
 app.use('/api', apiRoutes)
 

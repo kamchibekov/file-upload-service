@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { sign, verify } from 'jsonwebtoken'
 import { validationResult } from 'express-validator'
 import { createUser } from '../repository/user.repository'
+import responseTime from 'response-time'
 
 // Just for example project. For production need to use databases like redis or others
 import Session from '../session.handler'
