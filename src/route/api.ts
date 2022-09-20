@@ -4,6 +4,7 @@ import * as File from '../controller/file.controller'
 import { oneOf, body, check, param } from 'express-validator'
 import { AppDataSource } from '../data-source'
 import { User } from '../entity/user.entity'
+import { File as FileEntity } from '../entity/file.entity'
 import { verifyPassword } from '../repository/user.repository'
 import { authenticateToken } from '../middleware/auth.middleware'
 import Multer from 'multer'
@@ -56,6 +57,7 @@ router.post(
   check('file').custom((file, { req }) => {
     if (!req.file || !req.file.mimetype)
       return Promise.reject(`File is required`)
+    return true
   }),
   File.upload
 )
@@ -63,8 +65,8 @@ router.post(
 router.get(
   '/file/list',
   authenticateToken,
-  param('list_size').isNumeric(),
-  param('page').isNumeric(),
+  param('list_size').isNumeric().optional(),
+  param('page').isNumeric().optional(),
   File.list
 )
 
@@ -92,12 +94,17 @@ router.get(
 router.put(
   '/file/update/:id',
   authenticateToken,
+  param('id').exists().isNumeric(),
+  check('id').custom(async (id) => {
+    const file = await AppDataSource.getRepository(FileEntity).findOneBy({ id })
+    if (!file) return Promise.reject(`id not found`)
+  }),
   FileUploader.single('file'),
   check('file').custom((file, { req }) => {
     if (!req.file || !req.file.mimetype)
       return Promise.reject(`File is required`)
+    return true
   }),
-  param('id').exists().isNumeric(),
   File.update
 )
 

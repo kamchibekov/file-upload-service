@@ -7,17 +7,18 @@ import {
 } from '../repository/file.repository'
 import { validationResult } from 'express-validator'
 import { File } from '../entity/file.entity'
+import { unlink } from 'node:fs/promises'
 
 export async function upload(req: Request, res: Response) {
   const errors = validationResult(req)
+  const file = req.file
 
   if (!errors.isEmpty()) {
+    if (file?.path) await unlink(file.path)
     res.status(400).json({ errors: errors.array() })
     return
   }
   try {
-    const file = req.file
-
     await createOrUpdateFile(null, file)
 
     res.sendStatus(200)
@@ -37,8 +38,8 @@ export async function list(req: Request, res: Response) {
 
   const list_size = (req.params.list_size as unknown as number) || 10
   const page = (req.params.page as unknown as number) || 1
-
-  res.json(await findFiles(page, list_size))
+  const [data, totalCount] = await findFiles(page, list_size)
+  res.json({ data, totalCount })
 }
 
 export async function remove(req: Request, res: Response) {
@@ -61,14 +62,15 @@ export async function download(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
   const errors = validationResult(req)
+  const file = req.file
 
   if (!errors.isEmpty()) {
+    if (file?.path) await unlink(file.path)
     res.status(400).json({ errors: errors.array() })
     return
   }
 
   try {
-    const file = req.file
     const id: number = req.params.id as unknown as number
 
     await createOrUpdateFile(id, file)
